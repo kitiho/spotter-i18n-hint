@@ -1,12 +1,11 @@
 import path from 'node:path'
-import type { ExtensionContext } from 'vscode'
 import { Uri, window, workspace } from 'vscode'
 import { parse } from '@babel/parser'
 import { version } from '../package.json'
 import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 
-export async function activate(ext: ExtensionContext) {
+export async function activate() {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
 
   window.showInformationMessage(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
@@ -52,7 +51,7 @@ export async function activate(ext: ExtensionContext) {
 
     // 将obj的key按照长度排序，然后拼接成正则表达式，其中特殊符号需要转义
     const regEx = new RegExp(Object.keys(obj).sort((a, b) => b.length - a.length).map(item => item.replace(/([.*+?^=!:${}()|[\]/\\])/g, '\\$1')).join('|'), 'g')
-    registerAnnotations(cwd, ext, obj, regEx)
+    registerAnnotations(cwd, obj, regEx)
   }
   catch (e: any) {
     log.appendLine(String(e.stack ?? e))

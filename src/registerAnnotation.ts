@@ -1,9 +1,8 @@
-import type { DecorationOptions, ExtensionContext } from 'vscode'
+import type { DecorationOptions } from 'vscode'
 import { DecorationRangeBehavior, MarkdownString, Range, window, workspace } from 'vscode'
 import { isSubdir, throttle } from './utils'
 
 export async function registerAnnotations(cwd: string,
-  ext: ExtensionContext,
   obj: Record<string, string>,
   regEx: RegExp) {
   const UnderlineDecoration = window.createTextEditorDecorationType({
