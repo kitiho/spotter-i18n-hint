@@ -1,24 +1,20 @@
 {
-  "publisher": "antfu",
-  "name": "ext-name",
-  "displayName": "ext-name",
-  "version": "0.0.0",
+  "publisher": "kitiho",
+  "name": "spotter-i18n-hint",
+  "displayName": "spotter-i18n-hint",
+  "version": "0.0.1",
   "private": true,
   "packageManager": "pnpm@7.8.0",
-  "description": "",
-  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "description": "Exclusive for Spotter. When hovering over the corresponding i18n key, the corresponding value will be displayed.",
+  "author": "Kitiho <duanjipeng0328@gmail.com>",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/antfu",
-  "homepage": "https://github.com/antfu/ext-name#readme",
+  "homepage": "https://github.com/kitiho/spotter-i18n-hint",
   "repository": {
     "type": "git",
-    "url": "https://github.com/antfu/ext-name"
+    "url": "https://github.com/kitiho/spotter-i18n-hint.git"
   },
   "bugs": {
-    "url": "https://github.com/antfu/ext-name/issues"
-  },
-  "sponsor": {
-    "url": "https://github.com/sponsors/antfu"
+    "url": "https://github.com/kitiho/spotter-i18n-hint/issues"
   },
   "categories": [
     "Other"
@@ -34,6 +30,23 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "spotter",
+      "properties": {
+        "spotter.disable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disable the Spotter extension"
+        },
+        "spotter.i18nDtsFilePath": {
+          "type": "string",
+          "description": "The path to the @spotter/i18n-sdk/lib/trans/index.d.ts file"
+        }
+      }
+    }
+  },
   "scripts": {
     "build": "tsup src/index.ts --external vscode",
     "dev": "nr build --watch",
@@ -48,6 +61,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^0.25.2",
     "@antfu/ni": "^0.17.2",
+    "@babel/parser": "^7.21.3",
     "@types/node": "^18.6.4",
     "@types/vscode": "^1.69.0",
     "bumpp": "^8.2.1",
@@ -61,4 +75,5 @@
     "vitest": "^0.21.0",
     "vsce": "^2.10.0"
   }
+
 }
