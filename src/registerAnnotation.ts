@@ -15,32 +15,11 @@ export async function registerAnnotations(cwd: string,
     rangeBehavior: DecorationRangeBehavior.ClosedClosed,
   })
 
-  const colorDecoration = window.createTextEditorDecorationType({
-    before: {
-      width: '0.9em',
-      height: '0.9em',
-      contentText: ' ',
-      border: '1px solid',
-      margin: 'auto 0.2em auto 0;vertical-align: middle;border-radius:50%;',
-    },
-    dark: {
-      before: {
-        borderColor: '#eeeeee50',
-      },
-    },
-    light: {
-      before: {
-        borderColor: '#00000050',
-      },
-    },
-  })
-
   async function updateAnnotation(editor = window.activeTextEditor) {
     try {
       function reset() {
         editor?.setDecorations(UnderlineDecoration, [])
         editor?.setDecorations(NoneDecoration, [])
-        editor?.setDecorations(colorDecoration, [])
       }
       const doc = editor?.document
 
