@@ -1,6 +1,6 @@
-import path from 'node:path'
 import type { DecorationOptions, ExtensionContext } from 'vscode'
 import { DecorationRangeBehavior, MarkdownString, Range, window, workspace } from 'vscode'
+import { isSubdir, throttle } from './utils'
 
 export async function registerAnnotations(cwd: string,
   ext: ExtensionContext,
@@ -63,24 +63,5 @@ export async function registerAnnotations(cwd: string,
       throttledUpdateAnnotation()
   })
   await updateAnnotation()
-}
-export function isSubdir(parent: string, child: string) {
-  const relative = path.relative(parent, child)
-  return relative && !relative.startsWith('..') && !path.isAbsolute(relative)
-}
-export function throttle<T extends ((...args: any) => any)>(func: T, timeFrame: number): T {
-  let lastTime = 0
-  let timer: any
-  return function (...args) {
-    const now = Date.now()
-    clearTimeout(timer)
-    if (now - lastTime >= timeFrame) {
-      lastTime = now
-      return func(...args)
-    }
-    else {
-      timer = setTimeout(func, timeFrame, ...args)
-    }
-  } as T
 }
 
