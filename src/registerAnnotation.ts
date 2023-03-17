@@ -1,10 +1,8 @@
-import type { DecorationOptions } from 'vscode'
+import type { DecorationOptions, ExtensionContext } from 'vscode'
 import { DecorationRangeBehavior, MarkdownString, Range, window, workspace } from 'vscode'
 import { isSubdir, throttle } from './utils'
 
-export async function registerAnnotations(cwd: string,
-  obj: Record<string, string>,
-  regEx: RegExp) {
+export async function registerAnnotations(cwd: string, ctx: ExtensionContext, obj: Record<string, Record<string, string>>, regEx: RegExp) {
   const UnderlineDecoration = window.createTextEditorDecorationType({
     textDecoration: 'none; border-bottom: 1px dashed currentColor',
     rangeBehavior: DecorationRangeBehavior.ClosedClosed,
@@ -39,12 +37,17 @@ export async function registerAnnotations(cwd: string,
       let match
       const i18nKeys: DecorationOptions[] = []
       // eslint-disable-next-line no-cond-assign
-      while (match = regEx.exec(text)) {
+      while ((match = regEx.exec(text))) {
         const startPos = editor.document.positionAt(match.index)
         const endPos = editor.document.positionAt(match.index + match[0].length)
+        const markdown = new MarkdownString()
+          .appendMarkdown('![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/logo_brand.png|"width=100")')
+          .appendMarkdown(`\n\nen · <code>${obj.en[match[0]]}</code>`)
+          .appendMarkdown(`\n\nzh · <code>${obj.zh[match[0]]}</code>`)
+        markdown.supportHtml = true
         const decoration = {
           range: new Range(startPos, endPos),
-          hoverMessage: new MarkdownString(`**${obj[match[0]]}**`),
+          hoverMessage: markdown,
         }
         i18nKeys.push(decoration)
       }
@@ -52,7 +55,7 @@ export async function registerAnnotations(cwd: string,
       editor.setDecorations(NoneDecoration, [])
       editor.setDecorations(UnderlineDecoration, i18nKeys)
     }
-    catch (error) { }
+    catch (error) {}
   }
 
   const throttledUpdateAnnotation = throttle(updateAnnotation, 200)
@@ -63,4 +66,3 @@ export async function registerAnnotations(cwd: string,
   })
   await updateAnnotation()
 }
-
