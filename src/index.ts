@@ -1,6 +1,6 @@
 import path from 'node:path'
 import type { ExtensionContext } from 'vscode'
-import { Uri, window, workspace } from 'vscode'
+import { Uri, workspace } from 'vscode'
 import { parse } from '@babel/parser'
 import { version } from '../package.json'
 import { registerAnnotations } from './registerAnnotation'
@@ -8,8 +8,6 @@ import { log } from './log'
 
 export async function activate(ctx: ExtensionContext) {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
-
-  window.showInformationMessage(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
 
   const projectPath = workspace.workspaceFolders?.[0].uri.fsPath
   if (!projectPath) {
