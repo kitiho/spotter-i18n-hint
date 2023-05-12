@@ -1,7 +1,5 @@
-import path from 'node:path'
 import type { ExtensionContext } from 'vscode'
 import { Uri, window, workspace } from 'vscode'
-import { parse } from '@babel/parser'
 import { version } from '../package.json'
 import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
@@ -27,46 +25,41 @@ export async function activate(ctx: ExtensionContext) {
   const cwd = projectPath
 
   try {
-    const obj: Record<string, Record<string, string>> = {
+    const obj: Record<'zh' | 'en', Record<string, Record<string, string>>> = {
       en: {},
       zh: {},
     }
-
-    const res = await Promise.allSettled(
-      ['en', 'zh'].map((lang) => {
-        // client/node_modules/@spotter/i18n-sdk/lib/trans/index.d.ts
-        const i18nDtsFilePath = config.get<string>(`i18nDtsFilePath_${lang}`) || `client/node_modules/@spotter/i18n-sdk/lib/trans${lang === 'en' ? '' : 'ZH'}/index.d.ts`
-        const dtsFilePath = path.join(cwd, i18nDtsFilePath)
-        const dtsFileUri = Uri.file(dtsFilePath)
-        workspace.fs.readFile(dtsFileUri)
-        // 解析dts文件，获取所有的key和value，然后拼接成一个对象
-        return workspace.fs.readFile(dtsFileUri)
-      }),
-    )
-    const data = res.filter(data => data.status === 'fulfilled')
-    if (!data.length) {
-      log.appendLine('➖ No i18n dts file found, spotter-i18n-hint is disabled')
+    const enJsonFilePath = config.get<string>('i18nJsonFilePath_en')
+    const zhJsonFilePath = config.get<string>('i18nJsonFilePath_zh')
+    if (!enJsonFilePath || !zhJsonFilePath) {
+      log.appendLine('➖ No i18n json file found, spotter-i18n-hint is disabled')
       return
     }
+    const res = await Promise.allSettled(
+      [enJsonFilePath, zhJsonFilePath].map((jsonFilePath) => {
+        if (!jsonFilePath)
+          return Promise.resolve('{}')
+        const jsonFileUri = Uri.file(jsonFilePath)
+        workspace.fs.readFile(jsonFileUri)
+        // 解析json文件，获取所有的key和value，然后拼接成一个对象
+        return workspace.fs.readFile(jsonFileUri)
+      }),
+    )
+    const data = res.filter(data => data.status === 'fulfilled' && data.value !== '{}')
+    if (!data.length) {
+      log.appendLine('➖ No i18n json file found, spotter-i18n-hint is disabled')
+      return
+    }
+
     data.forEach((data: any, index) => {
       const dtsFileStr = Buffer.from(data.value).toString('utf8')
-      const ast = parse(dtsFileStr, {
-        sourceType: 'module',
-        plugins: ['typescript'],
-      })
-      // dts 的 ast生成的结构，debug出来的
-      const i18nData = (ast.program.body[0] as any).declarations[0].id.typeAnnotation.typeAnnotation.members
-      i18nData.forEach((item: any) => {
-        const key = item.key?.value
-        const value = item.typeAnnotation.typeAnnotation.literal?.value
-        if (!key || !value)
-          log.appendLine(`➖ key or value is undefined, key: ${key}, value: ${value}`)
-        else obj[['en', 'zh'][index]][key] = value
-      })
+      const jsonData = JSON.parse(dtsFileStr)
+      obj[index === 0 ? 'en' : 'zh'] = jsonData
     })
+    const allKeys = Object.keys(obj.en).map(firstKey => Object.keys(obj.en[firstKey]).map(secondKey => `${firstKey}.${secondKey}`)).flat()
     // 将obj的key按照长度排序，然后拼接成正则表达式，其中特殊符号需要转义
     const regEx = new RegExp(
-      Object.keys(obj.en)
+      allKeys
         .sort((a, b) => b.length - a.length)
         .map(item => item.replace(/([.*+?^=!:${}()|[\]/\\])/g, '\\$1'))
         .join('|'),

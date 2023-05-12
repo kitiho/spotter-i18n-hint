@@ -2,7 +2,7 @@
   "publisher": "kitiho",
   "name": "spotter-i18n-hint",
   "displayName": "spotter-i18n-hint",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "packageManager": "pnpm@7.8.0",
   "description": "Exclusive for Spotter. When hovering over the corresponding i18n key, the corresponding value will be displayed.",
@@ -40,9 +40,13 @@
           "default": false,
           "description": "Disable the Spotter extension"
         },
-        "spotter.i18nDtsFilePath": {
+        "spotter.i18nJsonFilePath_en": {
           "type": "string",
-          "description": "The path to the @spotter/i18n-sdk/lib/trans/index.d.ts file"
+          "description": "The path to the en.json file"
+        },
+        "spotter.i18nJsonFilePath_zh": {
+          "type": "string",
+          "description": "The path to the zh.json file"
         }
       }
     }
