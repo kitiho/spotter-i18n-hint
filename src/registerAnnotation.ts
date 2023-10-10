@@ -44,7 +44,7 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
         const markdown = new MarkdownString()
           .appendMarkdown(`\n\nen · <code>${obj.en?.[key]}</code>`)
           .appendMarkdown(`\n\nzh · <code>${obj.zh?.[key]}</code>`)
-          .appendMarkdown('\n\n![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.svg|"width=50")')
+          .appendMarkdown('\n\n![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=50")')
         markdown.supportHtml = true
         const decoration: DecorationOptions = {
           range: new Range(startPos, endPos),
