@@ -1,6 +1,7 @@
 import type { DecorationOptions } from 'vscode'
 import { DecorationRangeBehavior, MarkdownString, Range, window, workspace } from 'vscode'
 import { isSubdir, throttle } from './utils'
+import { log } from './log'
 
 export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', Record<string, string>>, regEx: RegExp) {
   const UnderlineDecoration = window.createTextEditorDecorationType({
@@ -57,7 +58,9 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
       editor.setDecorations(NoneDecoration, [])
       editor.setDecorations(UnderlineDecoration, i18nKeys)
     }
-    catch (error) { }
+    catch (e: any) {
+      log.appendLine(String(e.stack ?? e))
+    }
   }
 
   const throttledUpdateAnnotation = throttle(updateAnnotation, 200)

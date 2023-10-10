@@ -1,10 +1,11 @@
+import type { ExtensionContext } from 'vscode'
 import { workspace } from 'vscode'
 import { version } from '../package.json'
 import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 import { getI18nSource } from './getSource'
 
-export async function activate() {
+export async function activate(_ctx: ExtensionContext) {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
 
   const projectPath = workspace.workspaceFolders?.[0].uri.fsPath
