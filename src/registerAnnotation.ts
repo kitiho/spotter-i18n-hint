@@ -1,8 +1,8 @@
-import type { DecorationOptions, ExtensionContext } from 'vscode'
+import type { DecorationOptions } from 'vscode'
 import { DecorationRangeBehavior, MarkdownString, Range, window, workspace } from 'vscode'
 import { isSubdir, throttle } from './utils'
 
-export async function registerAnnotations(cwd: string, ctx: ExtensionContext, obj: Record<'en' | 'zh', Record<string, Record<string, string>>>, regEx: RegExp) {
+export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', Record<string, string>>, regEx: RegExp) {
   const UnderlineDecoration = window.createTextEditorDecorationType({
     textDecoration: 'none; border-bottom: 1px dashed currentColor',
     rangeBehavior: DecorationRangeBehavior.ClosedClosed,
@@ -38,16 +38,15 @@ export async function registerAnnotations(cwd: string, ctx: ExtensionContext, ob
       const i18nKeys: DecorationOptions[] = []
       // eslint-disable-next-line no-cond-assign
       while ((match = regEx.exec(text))) {
-        const firstKey = match[0].split('.')[0]
-        const secondKey = match[0].split('.')[1]
+        const key = match[0]
         const startPos = editor.document.positionAt(match.index)
         const endPos = editor.document.positionAt(match.index + match[0].length)
         const markdown = new MarkdownString()
-          .appendMarkdown('![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/logo_brand.png|"width=100")')
-          .appendMarkdown(`\n\nen · <code>${obj.en?.[firstKey]?.[secondKey]}</code>`)
-          .appendMarkdown(`\n\nzh · <code>${obj.zh?.[firstKey]?.[secondKey]}</code>`)
+          .appendMarkdown(`\n\nen · <code>${obj.en?.[key]}</code>`)
+          .appendMarkdown(`\n\nzh · <code>${obj.zh?.[key]}</code>`)
+          .appendMarkdown('\n\n![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.svg|"width=50")')
         markdown.supportHtml = true
-        const decoration = {
+        const decoration: DecorationOptions = {
           range: new Range(startPos, endPos),
           hoverMessage: markdown,
         }
@@ -57,7 +56,7 @@ export async function registerAnnotations(cwd: string, ctx: ExtensionContext, ob
       editor.setDecorations(NoneDecoration, [])
       editor.setDecorations(UnderlineDecoration, i18nKeys)
     }
-    catch (error) {}
+    catch (error) { }
   }
 
   const throttledUpdateAnnotation = throttle(updateAnnotation, 200)
