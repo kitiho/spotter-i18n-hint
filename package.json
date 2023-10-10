@@ -40,13 +40,21 @@
           "default": false,
           "description": "Disable the Spotter extension"
         },
-        "spotter.i18nJsonFilePath_en": {
+        "spotter.i18n_api_key": {
           "type": "string",
-          "description": "The path to the en.json file"
+          "description": "开发api_key"
         },
-        "spotter.i18nJsonFilePath_zh": {
+        "spotter.i18n_operator_id": {
           "type": "string",
-          "description": "The path to the zh.json file"
+          "description": "用户ID 默认主账号spotter "
+        },
+        "spotter.i18n_project_id": {
+          "type": "string",
+          "description": "项目ID"
+        },
+        "spotter.i18n_namespace_id": {
+          "type": "string",
+          "description": "空间ID"
         }
       }
     }
@@ -61,6 +69,9 @@
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "release": "bumpp && nr publish"
+  },
+  "dependencies": {
+    "request": "^2.88.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.25.2",
@@ -79,8 +90,5 @@
     "vite": "^3.0.4",
     "vitest": "^0.21.0",
     "vsce": "^2.10.0"
-  },
-  "dependencies": {
-    "request": "^2.88.2"
   }
 }
