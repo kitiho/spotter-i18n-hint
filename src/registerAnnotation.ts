@@ -42,10 +42,11 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
         const startPos = editor.document.positionAt(match.index)
         const endPos = editor.document.positionAt(match.index + match[0].length)
         const markdown = new MarkdownString()
+        markdown.supportHtml = true
+        markdown.appendMarkdown('<b><h3>Spotter i18n hint ![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=20") </h3></b>')
+          .appendMarkdown('<hr>')
           .appendMarkdown(`\n\nen · <code>${obj.en?.[key]}</code>`)
           .appendMarkdown(`\n\nzh · <code>${obj.zh?.[key]}</code>`)
-          .appendMarkdown('\n\n![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=50")')
-        markdown.supportHtml = true
         const decoration: DecorationOptions = {
           range: new Range(startPos, endPos),
           hoverMessage: markdown,
