@@ -10,7 +10,9 @@ export async function activate(_ctx: ExtensionContext) {
 
   const projectPath = workspace.workspaceFolders?.[0].uri.fsPath
   if (!projectPath) {
-    log.appendLine('➖ No active workspace found, spotter-i18n-hint is disabled')
+    log.appendLine(
+      '➖ No active workspace found, spotter-i18n-hint is disabled',
+    )
     return
   }
 
@@ -21,12 +23,10 @@ export async function activate(_ctx: ExtensionContext) {
     return
   }
 
-  const i18n_api_key = config.get<string>('i18n_api_key', '')
-  const i18n_operator_id = config.get<string>('i18n_operator_id', '')
-  const i18n_project_id = config.get<string>('i18n_project_id', '')
-  const i18n_namespace_id = config.get<string>('i18n_namespace_id', '')
-  if (!i18n_api_key || !i18n_operator_id || !i18n_project_id || !i18n_namespace_id) {
-    log.appendLine('➖ i18n_api_key or i18n_operator_id or i18n_project_id or i18n_namespace_id is empty')
+  const component = config.get<string>('component', '')
+
+  if (!component) {
+    log.appendLine('➖ component is empty')
     return
   }
 
@@ -38,16 +38,10 @@ export async function activate(_ctx: ExtensionContext) {
       zh: {},
     }
     const zhData: any = await getI18nSource('zh', {
-      i18n_api_key,
-      i18n_operator_id,
-      i18n_project_id,
-      i18n_namespace_id,
+      component,
     })
     const enData: any = await getI18nSource('en', {
-      i18n_api_key,
-      i18n_operator_id,
-      i18n_project_id,
-      i18n_namespace_id,
+      component,
     })
     obj.zh = zhData
     obj.en = enData
@@ -67,4 +61,4 @@ export async function activate(_ctx: ExtensionContext) {
   }
 }
 
-export function deactivate() { }
+export function deactivate() {}

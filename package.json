@@ -2,7 +2,7 @@
   "publisher": "kitiho",
   "name": "spotter-i18n-hint",
   "displayName": "spotter-i18n-hint",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "packageManager": "pnpm@7.8.0",
   "description": "Exclusive for Spotter. When hovering over the corresponding i18n key, the corresponding value will be displayed.",
@@ -40,21 +40,9 @@
           "default": false,
           "description": "Disable the Spotter extension"
         },
-        "spotter.i18n_api_key": {
+        "spotter.component": {
           "type": "string",
-          "description": "开发api_key"
-        },
-        "spotter.i18n_operator_id": {
-          "type": "string",
-          "description": "用户ID 默认主账号spotter "
-        },
-        "spotter.i18n_project_id": {
-          "type": "string",
-          "description": "项目ID"
-        },
-        "spotter.i18n_namespace_id": {
-          "type": "string",
-          "description": "空间ID"
+          "description": "部件"
         }
       }
     }
@@ -80,6 +68,7 @@
     "@types/node": "^18.6.4",
     "@types/request": "^2.48.9",
     "@types/vscode": "^1.69.0",
+    "axios": "1.7.5",
     "bumpp": "^8.2.1",
     "eslint": "^8.21.0",
     "esno": "^0.16.3",

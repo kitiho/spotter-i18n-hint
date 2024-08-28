@@ -1,68 +1,60 @@
-import request from 'request'
+import axios from 'axios'
 
-const i18n_domain_url = 'https://starling-public.zijieapi.com'
+enum Lang {
+  ZH = 'zh',
+  EN = 'en',
+  // 默认语言中文简体
+  ZH_HANS = 'zh_Hans',
+}
+// 默认域名
+const DOMAIN_URL = 'https://weblate.spotterio.com'
+// 默认项目
+const PROJECT = 'spotter-dev'
+// 默认部件
+const COMMON = 'common'
 
-export const getI18nSource = async (locale: 'zh' | 'en', {
-  i18n_api_key,
-  i18n_operator_id,
-  i18n_project_id,
-  i18n_namespace_id,
-}: {
-  i18n_api_key: string
-  i18n_operator_id: string
-  i18n_project_id: string
-  i18n_namespace_id: string
-}) => {
-  const getTokenUrl = `${i18n_domain_url}/v3/get_auth_token/${i18n_api_key}/${i18n_operator_id}/${i18n_project_id}/${i18n_namespace_id}/`
-  const SOURCE_PATH = `${i18n_domain_url}/text_test2/${i18n_namespace_id}/`
-
-  // 获取token
-  const getToken = async () => {
-    const res = await new Promise((resolve, reject) => {
-      request.post(
-        {
-          url: getTokenUrl,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-        (error: any, response: any, body: any) => {
-          if (response.statusCode === 200)
-            resolve(JSON.parse(body))
-
-          reject(error)
-        },
-      )
-    })
-    return res
-  }
-
+export const getI18nSource = async (
+  locale: 'zh' | 'en',
+  {
+    component,
+  }: {
+    component: string
+  },
+) => {
   // 获取源语言
-  function getSourceLocale(locale: string) {
+  function getSourceLocale(_locale: string, _component: string) {
     return new Promise((resolve, reject) => {
-      getToken().then((res: any) => {
-        request(
-          {
-            url: SOURCE_PATH + locale,
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': res?.data?.token,
-            },
-          },
-          (error: any, response: any, body: any) => {
-            if (!error && response.statusCode === 200)
-              resolve(JSON.parse(body))
-
-            reject(error)
-          },
-        )
+      axios({
+        url: `${DOMAIN_URL}/api/translations/${PROJECT}/${component}/${
+          // zh_Hans to zh映射
+          _locale === Lang.ZH ? Lang.ZH_HANS : _locale || Lang.ZH_HANS
+        }/file/`,
+        headers: {
+          'Content-Type': 'application/json',
+          // token这里直接写死
+          'Authorization': 'Token wlu_xRmTEHTCLVlpGhYunVeyFm4kO7AORbHUcZfv',
+          'Cache-Control': 'no-cache',
+        },
       })
+        .then((res: any) => {
+          // TODO 304命中缓存去拿数据
+          if (res.status === 200)
+            resolve(res.data)
+          else reject(new Error('拉取翻译失败'))
+        })
+        .catch((err: any) => {
+          reject(err)
+        })
     })
   }
 
-  const res: any = await getSourceLocale(locale)
-  if (res.status === 200)
-    return res.message.data
-  else
-    return {}
+  const resList: any = await Promise.all([
+    getSourceLocale(locale, component),
+    getSourceLocale(locale, COMMON),
+  ])
+  const source = {
+    ...resList[0],
+    ...resList[1],
+  }
+  return source
 }
