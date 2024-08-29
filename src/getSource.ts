@@ -25,7 +25,7 @@ export const getI18nSource = async (
   function getSourceLocale(_locale: string, _component: string) {
     return new Promise((resolve, reject) => {
       axios({
-        url: `${DOMAIN_URL}/api/translations/${PROJECT}/${component}/${
+        url: `${DOMAIN_URL}/api/translations/${PROJECT}/${_component}/${
           // zh_Hans to zh映射
           _locale === Lang.ZH ? Lang.ZH_HANS : _locale || Lang.ZH_HANS
         }/file/`,
