@@ -33,7 +33,7 @@ export function contextMenu(context: vscode.ExtensionContext) {
       const terminal = vscode.window.createTerminal({
         name: 'i18n-HINT',
       });
-      terminal.sendText(`pnpm i18n --entry ${commandParams}`, true);
+      terminal.sendText(`app-cli i18n all --entry ${commandParams}`, true);
     },
   );
   context.subscriptions.push(disposable);
