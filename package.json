@@ -25,12 +25,45 @@
     "dist"
   ],
   "engines": {
-    "vscode": "^1.69.0"
+    "vscode": "^1.90.0"
   },
   "activationEvents": [
     "onStartupFinished"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "spotter-i18n-hint.translater",
+        "title": "翻译"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "spotter-i18n-hint.translater",
+        "key": "cmd+shift+t",
+        "when": "editorTextFocus"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceDir",
+          "command": "spotter-i18n-hint.translater",
+          "group": "navigation"
+        },
+        {
+          "when": "!resourceDir",
+          "command": "spotter-i18n-hint.translater",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "spotter-i18n-hint.translater",
+          "group": "navigation"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "spotter",
@@ -49,7 +82,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --external vscode",
-    "dev": "nr build --watch",
+    "dev": "npm run build --watch",
     "lint": "eslint .",
     "vscode:prepublish": "nr build",
     "publish": "vsce publish --no-dependencies",
@@ -67,7 +100,7 @@
     "@babel/parser": "^7.21.3",
     "@types/node": "^18.6.4",
     "@types/request": "^2.48.9",
-    "@types/vscode": "^1.69.0",
+    "@types/vscode": "^1.90.0",
     "axios": "1.7.5",
     "bumpp": "^8.2.1",
     "eslint": "^8.21.0",

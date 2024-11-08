@@ -4,6 +4,7 @@ import { version } from '../package.json'
 import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 import { getI18nSource } from './getSource'
+import { contextMenu } from './contextMenu'
 
 export async function activate(_ctx: ExtensionContext) {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
@@ -55,6 +56,7 @@ export async function activate(_ctx: ExtensionContext) {
       'g',
     )
     registerAnnotations(cwd, obj, regEx)
+    contextMenu(_ctx)
   }
   catch (e: any) {
     log.appendLine(String(e.stack ?? e))
