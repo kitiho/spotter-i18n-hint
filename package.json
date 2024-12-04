@@ -2,7 +2,7 @@
   "publisher": "kitiho",
   "name": "spotter-i18n-hint",
   "displayName": "spotter-i18n-hint",
-  "version": "2.0.1",
+  "version": "2.0.3",
   "private": true,
   "packageManager": "pnpm@7.8.0",
   "description": "Exclusive for Spotter. When hovering over the corresponding i18n key, the corresponding value will be displayed.",
