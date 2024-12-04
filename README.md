@@ -8,6 +8,17 @@ Spotter extension to display the corresponding value of i18n key.
 
 ![icon](./res/demo.gif)
 
+base use:
+Set up the translation widget in your editor's workspace, like this
+![icon](./res/settingComponents.png)
+
+featrue 
+Added the right-click menu to quickly translate files/directories, 
+and also supports shortcut keys to translate files
+Commond: `cmd` + `shift` + `t`
+Right-click menu: 
+![icon](./res/rightClickMenu.png)
+
 ## License
 
 [MIT](./LICENSE) License © 2023 [kitiho](https://github.com/kitiho)
