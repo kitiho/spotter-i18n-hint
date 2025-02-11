@@ -28,8 +28,8 @@ importers:
         specifier: ^2.48.9
         version: 2.48.9
       '@types/vscode':
-        specifier: ^1.69.0
-        version: 1.69.1
+        specifier: ^1.90.0
+        version: 1.97.0
       axios:
         specifier: 1.7.5
         version: 1.7.5
@@ -370,8 +370,8 @@ packages:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
     dev: true
 
-  /@types/vscode@1.69.1:
-    resolution: {integrity: sha512-YZ77g3u9S9Xw3dwAgRgNAwnKNS3nPlhSu3XKOIYQzCcItUrZovfJUlf/29wjON2VZvHGuYQnhKuJUP15ccpVIQ==}
+  /@types/vscode@1.97.0:
+    resolution: {integrity: sha512-ueE73loeOTe7olaVyqP9mrRI54kVPJifUPjblZo9fYcv1CuVLPOEKEkqW0GkqPC454+nCEoigLWnC2Pp7prZ9w==}
     dev: true
 
   /@typescript-eslint/eslint-plugin@5.27.1(@typescript-eslint/parser@5.27.1)(eslint@8.21.0)(typescript@4.7.4):
