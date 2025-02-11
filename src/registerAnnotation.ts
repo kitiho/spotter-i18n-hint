@@ -3,6 +3,14 @@ import { DecorationRangeBehavior, MarkdownString, Range, window, workspace } fro
 import { isSubdir, throttle } from './utils'
 import { log } from './log'
 
+function checkLanguageId(languageId: string) {
+  if (!['typescriptreact', 'javascriptreact', 'typescript', 'javascript'].includes(languageId)) {
+    // 清理已有的翻译标注
+    return false
+  }
+  return true
+}
+
 const UnderlineDecoration = window.createTextEditorDecorationType({
   textDecoration: 'none; border-bottom: 1px dashed currentColor',
   rangeBehavior: DecorationRangeBehavior.ClosedClosed,
@@ -18,8 +26,15 @@ export function resetDecoration() {
   editor?.setDecorations(NoneDecoration, [])
 }
 
-export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', Record<string, string>>, regEx: RegExp) {
+export async function registerAnnotations(
+  cwd: string,
+  obj: Record<'zh' | 'en', Record<string, string>>,
+  matcher: RegExp | ((content: string) => { index: number; key: string }[]),
+) {
   async function updateAnnotation(editor = window.activeTextEditor) {
+    if (!checkLanguageId(editor?.document.languageId || ''))
+      return
+
     try {
       function reset() {
         editor?.setDecorations(UnderlineDecoration, [])
@@ -35,38 +50,58 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
       if (!isSubdir(cwd, id))
         return reset()
 
-      const code = doc.getText()
-      if (!code)
+      const text = editor.document.getText()
+      if (!text)
         return reset()
 
-      const text = editor.document.getText()
-      // 匹配text
-      let match
       const i18nKeys: DecorationOptions[] = []
-      // eslint-disable-next-line no-cond-assign
-      while ((match = regEx.exec(text))) {
-        const fullMatch = match[0]
-        // 提取实际的 key 字符串
-        const keyMatch = fullMatch.match(/['"]([^'"]+)['"]/)
-        if (!keyMatch)
-          continue
 
-        const key = keyMatch[1]
-        // 计算 key 字符串的起始位置
-        const keyStartIndex = match.index + fullMatch.indexOf(keyMatch[0])
-        const startPos = editor.document.positionAt(keyStartIndex)
-        const endPos = editor.document.positionAt(keyStartIndex + keyMatch[0].length)
-        const markdown = new MarkdownString()
-        markdown.supportHtml = true
-        markdown.appendMarkdown('<b><h3>Spotter i18n hint ![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=20") </h3></b>')
-          .appendMarkdown('<hr>')
-          .appendMarkdown(`\n\nen · <code>${obj.en?.[key]}</code>`)
-          .appendMarkdown(`\n\nzh · <code>${obj.zh?.[key]}</code>`)
-        const decoration: DecorationOptions = {
-          range: new Range(startPos, endPos),
-          hoverMessage: markdown,
+      if (matcher instanceof RegExp) {
+        // 使用原有的正则匹配逻辑
+        let match
+        // eslint-disable-next-line no-cond-assign
+        while ((match = matcher.exec(text))) {
+          const fullMatch = match[0]
+          const keyMatch = fullMatch.match(/['"]([^'"]+)['"]/)
+          if (!keyMatch)
+            continue
+
+          const key = keyMatch[1]
+          const keyStartIndex = match.index + fullMatch.indexOf(keyMatch[0])
+          const startPos = editor.document.positionAt(keyStartIndex)
+          const endPos = editor.document.positionAt(keyStartIndex + keyMatch[0].length)
+          const markdown = new MarkdownString()
+          markdown.supportHtml = true
+          markdown.appendMarkdown('<b><h3>Spotter i18n hint ![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=20") </h3></b>')
+            .appendMarkdown('<hr>')
+            .appendMarkdown(`\n\nen · <code>${obj.en?.[key]}</code>`)
+            .appendMarkdown(`\n\nzh · <code>${obj.zh?.[key]}</code>`)
+          const decoration: DecorationOptions = {
+            range: new Range(startPos, endPos),
+            hoverMessage: markdown,
+          }
+          i18nKeys.push(decoration)
         }
-        i18nKeys.push(decoration)
+      }
+      else {
+        // 使用新的函数匹配逻辑
+        const matches = matcher(text)
+        for (const match of matches) {
+          const key = match.key
+          const startPos = editor.document.positionAt(match.index)
+          const endPos = editor.document.positionAt(match.index + key.length + 2) // +2 for quotes
+          const markdown = new MarkdownString()
+          markdown.supportHtml = true
+          markdown.appendMarkdown('<b><h3>Spotter i18n hint ![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=20") </h3></b>')
+            .appendMarkdown('<hr>')
+            .appendMarkdown(`\n\nen · <code>${obj.en?.[key]}</code>`)
+            .appendMarkdown(`\n\nzh · <code>${obj.zh?.[key]}</code>`)
+          const decoration: DecorationOptions = {
+            range: new Range(startPos, endPos),
+            hoverMessage: markdown,
+          }
+          i18nKeys.push(decoration)
+        }
       }
 
       editor.setDecorations(NoneDecoration, [])
@@ -88,6 +123,7 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
     if (e.document === window.activeTextEditor?.document)
       throttledUpdateAnnotation()
   })
+
   await updateAnnotation()
 
   return {

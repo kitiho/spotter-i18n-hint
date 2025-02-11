@@ -4,7 +4,7 @@ import * as path from 'path'
 import type { ExtensionContext } from 'vscode'
 import { workspace } from 'vscode'
 import { version } from '../package.json'
-import { registerAnnotations, resetDecoration } from './registerAnnotation'
+import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 import { getI18nSource } from './getSource'
 import { contextMenu } from './contextMenu'
@@ -64,24 +64,6 @@ export async function activate(_ctx: ExtensionContext) {
 
   const cwd = projectPath
 
-  // 监听文件打开和保存事件
-  workspace.onDidOpenTextDocument((document) => {
-    checkLanguageId(document.languageId)
-  })
-
-  workspace.onDidSaveTextDocument((document) => {
-    checkLanguageId(document.languageId)
-  })
-
-  function checkLanguageId(languageId: string) {
-    if (!['typescriptreact', 'javascriptreact', 'typescript', 'javascript'].includes(languageId)) {
-      // 清理已有的翻译标注
-      resetDecoration()
-      return false
-    }
-    return true
-  }
-
   try {
     const obj: Record<'zh' | 'en', Record<string, string>> = {
       en: {},
@@ -96,18 +78,36 @@ export async function activate(_ctx: ExtensionContext) {
     obj.zh = zhData
     obj.en = enData
     const allKeys = Object.keys(obj.zh)
-    // 构建正则表达式，匹配 t 函数调用和 i18nKey 属性中的 key
-    const regEx = new RegExp(
-      `(?:t\\s*\\(\\s*['"]|i18nKey\\s*:\\s*['"])(?:${
-        allKeys
-          .sort((a, b) => b.length - a.length)
-          .map(item => item.replace(/([.*+?^=!:${}()|[\]/\\])/g, '\\$1'))
-          .join('|')
-      })['"](?:\\s*\\)|)`,
-      'g',
-    )
+    const keySet = new Set(allKeys)
 
-    registerAnnotations(cwd, obj, regEx)
+    // 使用两步匹配策略，先匹配模式，再验证key
+    const patternRegex = /(?:t\s*\(\s*['"]([^'"]*)['"]\s*\)|i18nKey\s*:\s*['"]([^'"]*)['"]\s*)/g
+
+    // 创建一个函数来验证和提取匹配到的key
+    function extractValidKeys(content: string): { index: number; key: string }[] {
+      const results: { index: number; key: string }[] = []
+      let match
+
+      // eslint-disable-next-line no-cond-assign
+      while ((match = patternRegex.exec(content)) !== null) {
+        const key = match[1] || match[2]
+        if (keySet.has(key)) {
+          const fullMatch = match[0]
+          const keyMatch = fullMatch.match(/['"]([^'"]+)['"]/)
+          if (!keyMatch)
+            continue
+
+          results.push({
+            index: match.index + fullMatch.indexOf(keyMatch[0]) + 1, // +1 to skip the opening quote
+            key,
+          })
+        }
+      }
+
+      return results
+    }
+
+    registerAnnotations(cwd, obj, extractValidKeys)
     contextMenu(_ctx)
   }
   catch (e: any) {
