@@ -3,16 +3,22 @@ import { DecorationRangeBehavior, MarkdownString, Range, window, workspace } fro
 import { isSubdir, throttle } from './utils'
 import { log } from './log'
 
-export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', Record<string, string>>, regEx: RegExp) {
-  const UnderlineDecoration = window.createTextEditorDecorationType({
-    textDecoration: 'none; border-bottom: 1px dashed currentColor',
-    rangeBehavior: DecorationRangeBehavior.ClosedClosed,
-  })
-  const NoneDecoration = window.createTextEditorDecorationType({
-    textDecoration: 'none',
-    rangeBehavior: DecorationRangeBehavior.ClosedClosed,
-  })
+const UnderlineDecoration = window.createTextEditorDecorationType({
+  textDecoration: 'none; border-bottom: 1px dashed currentColor',
+  rangeBehavior: DecorationRangeBehavior.ClosedClosed,
+})
+const NoneDecoration = window.createTextEditorDecorationType({
+  textDecoration: 'none',
+  rangeBehavior: DecorationRangeBehavior.ClosedClosed,
+})
 
+export function resetDecoration() {
+  const editor = window.activeTextEditor
+  editor?.setDecorations(UnderlineDecoration, [])
+  editor?.setDecorations(NoneDecoration, [])
+}
+
+export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', Record<string, string>>, regEx: RegExp) {
   async function updateAnnotation(editor = window.activeTextEditor) {
     try {
       function reset() {
@@ -39,9 +45,17 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
       const i18nKeys: DecorationOptions[] = []
       // eslint-disable-next-line no-cond-assign
       while ((match = regEx.exec(text))) {
-        const key = match[0]
-        const startPos = editor.document.positionAt(match.index)
-        const endPos = editor.document.positionAt(match.index + match[0].length)
+        const fullMatch = match[0]
+        // 提取实际的 key 字符串
+        const keyMatch = fullMatch.match(/['"]([^'"]+)['"]/)
+        if (!keyMatch)
+          continue
+
+        const key = keyMatch[1]
+        // 计算 key 字符串的起始位置
+        const keyStartIndex = match.index + fullMatch.indexOf(keyMatch[0])
+        const startPos = editor.document.positionAt(keyStartIndex)
+        const endPos = editor.document.positionAt(keyStartIndex + keyMatch[0].length)
         const markdown = new MarkdownString()
         markdown.supportHtml = true
         markdown.appendMarkdown('<b><h3>Spotter i18n hint ![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=20") </h3></b>')
@@ -63,6 +77,11 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
     }
   }
 
+  function resetAnnotation(editor = window.activeTextEditor) {
+    editor?.setDecorations(UnderlineDecoration, [])
+    editor?.setDecorations(NoneDecoration, [])
+  }
+
   const throttledUpdateAnnotation = throttle(updateAnnotation, 200)
   window.onDidChangeActiveTextEditor(updateAnnotation)
   workspace.onDidChangeTextDocument((e) => {
@@ -70,4 +89,9 @@ export async function registerAnnotations(cwd: string, obj: Record<'zh' | 'en', 
       throttledUpdateAnnotation()
   })
   await updateAnnotation()
+
+  return {
+    updateAnnotation,
+    resetAnnotation,
+  }
 }
