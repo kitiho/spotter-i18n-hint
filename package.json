@@ -76,6 +76,12 @@
         "spotter.component": {
           "type": "string",
           "description": "部件"
+        },
+        "spotter.displayMode": {
+          "type": "string",
+          "enum": ["inline", "underline"],
+          "default": "inline",
+          "description": "翻译显示模式：inline - 内联显示，underline - 下划线模式"
         }
       }
     }
