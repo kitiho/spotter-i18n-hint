@@ -67,8 +67,10 @@ export async function registerAnnotations(
   })
 
   async function updateAnnotation(editor = window.activeTextEditor) {
-    if (!checkLanguageId(editor?.document.languageId || ''))
+    if (!checkLanguageId(editor?.document.languageId || '')) {
+      resetDecoration()
       return
+    }
 
     try {
       function reset() {
