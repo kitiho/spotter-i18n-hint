@@ -73,9 +73,13 @@
           "default": false,
           "description": "Disable the Spotter extension"
         },
+        "spotter.project": {
+          "type": "string",
+          "description": "项目, gmesh-local, sevc-local, spotter-dev等等"
+        },
         "spotter.component": {
           "type": "string",
-          "description": "部件"
+          "description": "组件，多个组件用逗号分隔, 例如：finance,warehouse"
         },
         "spotter.displayMode": {
           "type": "string",

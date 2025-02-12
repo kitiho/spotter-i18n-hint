@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as fs from 'fs'
 import * as path from 'path'
 import type { ExtensionContext } from 'vscode'
@@ -24,7 +23,6 @@ export async function activate(_ctx: ExtensionContext) {
   const clientPackageJsonPath = path.join(projectPath, 'client', 'package.json')
   if (!fs.existsSync(clientPackageJsonPath)) {
     log.appendLine('➖ client/package.json not found, spotter-i18n-hint is disabled')
-    console.log('client/package.json not found, spotter-i18n-hint is disabled')
     return
   }
 
@@ -36,13 +34,11 @@ export async function activate(_ctx: ExtensionContext) {
 
     if (!hasI18nSdk) {
       log.appendLine('➖ @spotter/i18n-sdk not found in dependencies, spotter-i18n-hint is disabled')
-      console.log('@spotter/i18n-sdk not found in dependencies, spotter-i18n-hint is disabled')
       return
     }
   }
   catch (error) {
     log.appendLine('➖ Error reading client/package.json, spotter-i18n-hint is disabled')
-    console.log('Error reading client/package.json, spotter-i18n-hint is disabled')
     return
   }
 
@@ -50,15 +46,16 @@ export async function activate(_ctx: ExtensionContext) {
   const disabled = config.get<boolean>('disable', false)
   if (disabled) {
     log.appendLine('➖ Disabled by configuration')
-    console.log('Disabled by configuration')
     return
   }
+
+  const project = config.get<string>('project', '')
+  log.appendLine(`✅ project: ${project}`)
 
   const component = config.get<string>('component', '')
 
   if (!component) {
     log.appendLine('➖ component is empty')
-    console.log('component is empty')
     return
   }
 
@@ -70,10 +67,12 @@ export async function activate(_ctx: ExtensionContext) {
       zh: {},
     }
     const zhData: any = await getI18nSource('zh', {
-      component,
+      components: component,
+      project,
     })
     const enData: any = await getI18nSource('en', {
-      component,
+      components: component,
+      project,
     })
     obj.zh = zhData
     obj.en = enData
