@@ -60,10 +60,12 @@ export const getI18nSource = async (
     // 公共组件
     getSourceLocale(locale, COMMON, DEFAULT_PROJECT),
   ])
-  const source = {
-    ...resList[0],
-    ...resList[1],
-  }
+  const source = resList.reduce((acc: Record<string, any>, curr: Record<string, any>) => {
+    return {
+      ...acc,
+      ...curr,
+    }
+  }, {})
   return source
 }
 
