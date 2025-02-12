@@ -14,6 +14,8 @@ function checkLanguageId(languageId: string) {
 // 获取配置
 const config = workspace.getConfiguration('spotter')
 const displayMode = config.get<string>('displayMode', 'inline') // 默认为内联模式
+const inlineTextColor = config.get<string>('inlineTextColor', 'rgba(153, 153, 153, .8)')
+const inlineBorderColor = config.get<string>('inlineBorderColor', 'rgba(153, 153, 153, .2)')
 
 const UnderlineDecoration = window.createTextEditorDecorationType({
   textDecoration: 'none; border-bottom: 1px dashed currentColor',
@@ -115,9 +117,9 @@ export async function registerAnnotations(
             range: new Range(startPos, endPos),
             renderOptions: {
               after: {
-                contentText: `${obj.zh?.[key] || obj.en?.[key]}`, // 使用空格代替 padding
-                color: 'rgba(153, 153, 153, .8)',
-                border: '0.5px solid rgba(153, 153, 153, .2); border-radius: 2px;',
+                contentText: `${obj.zh?.[key] || obj.en?.[key]}`,
+                color: inlineTextColor,
+                border: `0.5px solid ${inlineBorderColor}; border-radius: 2px;`,
               },
             },
             hoverMessage: new MarkdownString().appendText(`Key: ${key}`),

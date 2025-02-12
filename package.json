@@ -86,6 +86,16 @@
           "enum": ["inline", "underline"],
           "default": "inline",
           "description": "翻译显示模式：inline - 内联显示，underline - 下划线模式"
+        },
+        "spotter.inlineTextColor": {
+          "type": "string",
+          "default": "rgba(153, 153, 153, .8)",
+          "description": "内联翻译文本的颜色"
+        },
+        "spotter.inlineBorderColor": {
+          "type": "string",
+          "default": "rgba(153, 153, 153, .2)",
+          "description": "内联翻译边框的颜色"
         }
       }
     }
