@@ -7,7 +7,7 @@ import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 import { getI18nSource } from './getSource'
 import { contextMenu } from './contextMenu'
-import { patternRegex } from './regex'
+import { extractValidKeys } from './regex'
 
 export async function activate(_ctx: ExtensionContext) {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
@@ -80,32 +80,7 @@ export async function activate(_ctx: ExtensionContext) {
     const allKeys = Object.keys(obj.zh)
     const keySet = new Set(allKeys)
 
-    // 使用两步匹配策略，先匹配模式，再验证key
-    // 创建一个函数来验证和提取匹配到的key
-    function extractValidKeys(content: string): { index: number; key: string }[] {
-      const results: { index: number; key: string }[] = []
-      let match
-
-      // eslint-disable-next-line no-cond-assign
-      while ((match = patternRegex.exec(content)) !== null) {
-        const key = match[1] || match[2]
-        if (keySet.has(key)) {
-          const fullMatch = match[0]
-          const keyMatch = fullMatch.match(/['"]([^'"]+)['"]/)
-          if (!keyMatch)
-            continue
-
-          results.push({
-            index: match.index + fullMatch.indexOf(keyMatch[0]) + 1, // +1 to skip the opening quote
-            key,
-          })
-        }
-      }
-
-      return results
-    }
-
-    registerAnnotations(cwd, obj, extractValidKeys)
+    registerAnnotations(cwd, obj, (content: string) => extractValidKeys(content, keySet))
     contextMenu(_ctx)
   }
   catch (e: any) {
