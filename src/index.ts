@@ -7,6 +7,7 @@ import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 import { getI18nSource } from './getSource'
 import { contextMenu } from './contextMenu'
+import { patternRegex } from './regex'
 
 export async function activate(_ctx: ExtensionContext) {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
@@ -80,8 +81,6 @@ export async function activate(_ctx: ExtensionContext) {
     const keySet = new Set(allKeys)
 
     // 使用两步匹配策略，先匹配模式，再验证key
-    const patternRegex = /t\s*\(\s*['"]([^'"]*)['"]\s*(?:,\s*(?:{[^}]*})?)?\s*\)|i18nKey\s*:\s*['"]([^'"]*)['"]\s*/g
-
     // 创建一个函数来验证和提取匹配到的key
     function extractValidKeys(content: string): { index: number; key: string }[] {
       const results: { index: number; key: string }[] = []
