@@ -67,8 +67,13 @@ export async function registerAnnotations(
   })
 
   async function updateAnnotation(editor = window.activeTextEditor) {
-    if (!checkLanguageId(editor?.document.languageId || ''))
+    if (!checkLanguageId(editor?.document.languageId || '')) {
+      currentDecorations = []
+      editor?.setDecorations(UnderlineDecoration, [])
+      editor?.setDecorations(NoneDecoration, [])
+      editor?.setDecorations(InlineDecoration, [])
       return
+    }
 
     try {
       function reset() {
@@ -97,8 +102,8 @@ export async function registerAnnotations(
       const matches = matcher(text)
       for (const match of matches) {
         const key = match.key
-        const startPos = editor.document.positionAt(match.index - 1)
-        const endPos = editor.document.positionAt(match.index + key.length + 1)
+        const startPos = editor.document.positionAt(match.index)
+        const endPos = editor.document.positionAt(match.index + key.length + 2)
         const markdown = new MarkdownString()
         markdown.supportHtml = true
         markdown.appendMarkdown('<b><h3>Spotter i18n hint ![alt](https://raw.githubusercontent.com/kitiho/spotter-i18n-hint/main/res/spotter.png|"width=20") </h3></b>')
