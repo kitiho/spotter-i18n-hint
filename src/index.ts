@@ -1,3 +1,5 @@
+import * as fs from 'fs'
+import * as path from 'path'
 import type { ExtensionContext } from 'vscode'
 import { workspace } from 'vscode'
 import { version } from '../package.json'
@@ -6,6 +8,7 @@ import { log } from './log'
 import { getI18nSource } from './getSource'
 import { contextMenu } from './contextMenu'
 import { search } from './searchChinese'
+import { extractValidKeys } from './regex'
 
 export async function activate(_ctx: ExtensionContext) {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
@@ -18,12 +21,38 @@ export async function activate(_ctx: ExtensionContext) {
     return
   }
 
+  // 检查 client/package.json 是否存在
+  const clientPackageJsonPath = path.join(projectPath, 'client', 'package.json')
+  if (!fs.existsSync(clientPackageJsonPath)) {
+    log.appendLine('➖ client/package.json not found, spotter-i18n-hint is disabled')
+    return
+  }
+
+  // 检查是否包含 @spotter/i18n-sdk 依赖
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(clientPackageJsonPath, 'utf-8'))
+    const hasI18nSdk = (packageJson.dependencies && '@spotter/i18n-sdk' in packageJson.dependencies)
+                       || (packageJson.devDependencies && '@spotter/i18n-sdk' in packageJson.devDependencies)
+
+    if (!hasI18nSdk) {
+      log.appendLine('➖ @spotter/i18n-sdk not found in dependencies, spotter-i18n-hint is disabled')
+      return
+    }
+  }
+  catch (error) {
+    log.appendLine('➖ Error reading client/package.json, spotter-i18n-hint is disabled')
+    return
+  }
+
   const config = workspace.getConfiguration('spotter')
   const disabled = config.get<boolean>('disable', false)
   if (disabled) {
     log.appendLine('➖ Disabled by configuration')
     return
   }
+
+  const project = config.get<string>('project', '')
+  log.appendLine(`✅ project: ${project}`)
 
   const component = config.get<string>('component', '')
 
@@ -40,23 +69,19 @@ export async function activate(_ctx: ExtensionContext) {
       zh: {},
     }
     const zhData: any = await getI18nSource('zh', {
-      component,
+      components: component,
+      project,
     })
     const enData: any = await getI18nSource('en', {
-      component,
+      components: component,
+      project,
     })
     obj.zh = zhData
     obj.en = enData
     const allKeys = Object.keys(obj.zh)
-    // 将obj的key按照长度排序，然后拼接成正则表达式，其中特殊符号需要转义
-    const regEx = new RegExp(
-      allKeys
-        .sort((a, b) => b.length - a.length)
-        .map(item => item.replace(/([.*+?^=!:${}()|[\]/\\])/g, '\\$1'))
-        .join('|'),
-      'g',
-    )
-    registerAnnotations(cwd, obj, regEx)
+    const keySet = new Set(allKeys)
+
+    registerAnnotations(cwd, obj, (content: string) => extractValidKeys(content, keySet))
     contextMenu(_ctx)
     search(_ctx, zhData);
   }
