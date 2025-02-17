@@ -5,6 +5,7 @@ import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 import { getI18nSource } from './getSource'
 import { contextMenu } from './contextMenu'
+import { search } from './searchChinese'
 
 export async function activate(_ctx: ExtensionContext) {
   log.appendLine(`⚪️ spotter-i18n-hint for VS Code v${version}\n`)
@@ -57,6 +58,7 @@ export async function activate(_ctx: ExtensionContext) {
     )
     registerAnnotations(cwd, obj, regEx)
     contextMenu(_ctx)
+    search(_ctx, zhData);
   }
   catch (e: any) {
     log.appendLine(String(e.stack ?? e))

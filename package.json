@@ -35,6 +35,10 @@
       {
         "command": "spotter-i18n-hint.translater",
         "title": "翻译"
+      },
+      {
+        "command": "spotter-i18n-hint.search",
+        "title": "翻译搜索"
       }
     ],
     "keybindings": [
@@ -42,6 +46,16 @@
         "command": "spotter-i18n-hint.translater",
         "key": "cmd+shift+t",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "spotter-i18n-hint.search",
+        "key": "alt+shift+f",
+        "when": "true"
+      },
+      {
+        "command": "spotter-i18n-hint.search",
+        "key": "alt+f",
+        "when": "editorTextFocus" 
       }
     ],
     "menus": {
@@ -98,7 +112,7 @@
     "@antfu/eslint-config": "^0.25.2",
     "@antfu/ni": "^0.17.2",
     "@babel/parser": "^7.21.3",
-    "@types/node": "^18.6.4",
+    "@types/node": "^18.19.76",
     "@types/request": "^2.48.9",
     "@types/vscode": "^1.90.0",
     "axios": "1.7.5",
