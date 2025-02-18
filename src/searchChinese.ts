@@ -59,23 +59,19 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
         cancellable: true
     }, async (progress, token) => {
         const results = Object.entries(source)
-            .filter(([key, value]) => value === keyword);
+            .filter(([_, value]) => value === keyword);
 
         if (results.length > 0) {
             const files = await vscode.workspace.findFiles(
-                '**/routes/**/*.{ts,tsx}', 
-                '**/node_modules/**,**/i18n_source/**,**/dist/**'
+                '**/routes/**/*.{ts,tsx}'
             );
-
-            const keyLocations = new Map<string, string>();
+            const fileResults = new Map<string, string[]>();
             const totalFiles = files.length;
 
-            // 并行处理文件搜索
             const promises = files.map(async (file, index) => {
                 if (token.isCancellationRequested) {
                     return;
                 }
-
                 progress.report({ 
                     increment: (100 / totalFiles), 
                     message: `搜索文件 ${index + 1}/${totalFiles}` 
@@ -85,11 +81,12 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
                     const content = await vscode.workspace.fs.readFile(file);
                     const text = new TextDecoder().decode(content);
                     
-                    for (const [key, value] of results) {
-                        if (text.includes(value)) {
-                            keyLocations.set(key, file.fsPath);
-                            return; // 找到后立即返回，不再继续搜索该文件
-                        }
+                    // 检查文件是否包含任何一个key
+                    const foundKeys = results.filter(([key]) => text.includes(key));
+                    
+                    // 如果找到任何key,记录该文件包含哪些key
+                    if (foundKeys.length > 0) {
+                        fileResults.set(file.fsPath, foundKeys.map(([key]) => key));
                     }
                 } catch (error) {
                     console.error(`Error reading file ${file.fsPath}:`, error);
@@ -99,28 +96,28 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
             await Promise.all(promises);
 
             const quickPick = vscode.window.createQuickPick();
-
-            quickPick.items = results.map(result => ({
-                label: `$(file) ${result[0]}`,
-                description: result[1],
-                detail: keyLocations.get(result[0]) || '未找到文件位置'
-            }));
+            quickPick.items = Array.from(fileResults.entries()).map(([filePath, keys]) => {
+                return {
+                    label: `${filePath}`,
+                    description: `包含 ${keys.length} 个匹配项`,
+                    detail: `${keys.join(', ')} ${keyword}`
+                };
+            });
             quickPick.placeholder = '选择要跳转的结果';
             quickPick.title = `找到 ${results.length} 个匹配项`;
 
             quickPick.onDidAccept(async () => {
                 const selected = quickPick.selectedItems[0];
-                if (selected && selected.description) {
-                    const filePath = selected.detail;
+                if (selected && selected.detail) {
+                    const filePath = selected.label;
                     if (filePath && filePath !== '未找到文件位置') {
                         const document = await vscode.workspace.openTextDocument(filePath);
                         await vscode.window.showTextDocument(document);
-                        fileSearch(selected.description, source);
+                        fileSearch(keyword, source);
                     }
                 }
-                quickPick.hide();
+                // quickPick.hide();
             });
-
             quickPick.show();
         }  else {
             vscode.window.showInformationMessage('未找到匹配项');

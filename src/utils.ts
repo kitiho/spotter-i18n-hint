@@ -19,3 +19,11 @@ export function throttle<T extends ((...args: any) => any)>(func: T, timeFrame: 
     }
   } as T
 }
+
+export const parseJson = (json: string) => {
+  try {
+    return JSON.parse(json)
+  } catch (error) {
+    return json
+  }
+}
