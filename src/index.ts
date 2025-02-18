@@ -7,6 +7,7 @@ import { registerAnnotations } from './registerAnnotation'
 import { log } from './log'
 import { getI18nSource } from './getSource'
 import { contextMenu } from './contextMenu'
+import { search } from './searchChinese'
 import { extractValidKeys } from './regex'
 
 export async function activate(_ctx: ExtensionContext) {
@@ -82,6 +83,7 @@ export async function activate(_ctx: ExtensionContext) {
 
     registerAnnotations(cwd, obj, (content: string) => extractValidKeys(content, keySet))
     contextMenu(_ctx)
+    search(_ctx, zhData);
   }
   catch (e: any) {
     log.appendLine(String(e.stack ?? e))
