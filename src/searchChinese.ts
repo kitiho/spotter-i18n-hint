@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-
+/** 文件内搜索并标记 */
 async function fileSearch(keyword: string, source: Record<string, string>) {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
@@ -118,7 +118,7 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
                         fileSearch(selected.description, source);
                     }
                 }
-                // quickPick.hide();
+                quickPick.hide();
             });
 
             quickPick.show();
