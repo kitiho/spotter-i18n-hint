@@ -49,13 +49,8 @@
       },
       {
         "command": "spotter-i18n-hint.search",
-        "key": "alt+shift+f",
-        "when": "true"
-      },
-      {
-        "command": "spotter-i18n-hint.search",
         "key": "alt+f",
-        "when": "editorTextFocus" 
+        "when": "true" 
       }
     ],
     "menus": {

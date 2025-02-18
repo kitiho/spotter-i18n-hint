@@ -1,5 +1,57 @@
 import * as vscode from 'vscode';
 
+async function fileSearch(keyword: string, source: Record<string, string>) {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        const document = editor.document;
+        const results = [];
+        // 从翻译源中找到匹配的 key-value 对
+        const matchedPairs = Object.entries(source)
+            .filter(([_, value]) => value === keyword);
+      
+        if (matchedPairs.length > 0) {
+            // 获取当前文件内容
+            const text = document.getText();
+      
+            // 在当前文件中搜索匹配的 key
+            for (const [key, _] of matchedPairs) {
+                const keyRegex = new RegExp(`t\\(['"]${key}['"]`, 'g');
+                if (keyRegex.test(text)) {
+                    results.push(key);
+                }
+            }
+      
+            // 如果找到匹配项,选中所有匹配的key
+            if (results.length > 0) {
+                const selections: vscode.Selection[] = [];
+                    
+                // 遍历每一行查找匹配的key
+                // 构建一个合并的正则表达式来匹配所有key
+                const combinedPattern = results.map(key => `t\\(['"]${key}['"]\\)`).join('|');
+                const combinedRegex = new RegExp(combinedPattern, 'g');
+                    
+                // 获取整个文档文本
+                const fullText = document.getText();
+                let match;
+                    
+                // 只需要一次遍历就能找到所有匹配
+                while ((match = combinedRegex.exec(fullText)) !== null) {
+                    // 通过位置计算行号和列号
+                    const pos = document.positionAt(match.index);
+                    const endPos = document.positionAt(match.index + match[0].length);
+                    selections.push(new vscode.Selection(pos, endPos));
+                }
+                    
+                // 设置编辑器选中
+                editor.selections = selections;
+            }
+        } else {
+            vscode.window.showInformationMessage("翻译源中未找到包含该中文的条目");
+        }
+    }
+}
+
+/** 全局搜索中文 */
 async function globalSearch(keyword: string, source: Record<string, string>) {
     await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
@@ -7,7 +59,7 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
         cancellable: true
     }, async (progress, token) => {
         const results = Object.entries(source)
-            .filter(([key, value]) => value.includes(keyword));
+            .filter(([key, value]) => value === keyword);
 
         if (results.length > 0) {
             const files = await vscode.workspace.findFiles(
@@ -33,8 +85,8 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
                     const content = await vscode.workspace.fs.readFile(file);
                     const text = new TextDecoder().decode(content);
                     
-                    for (const [key] of results) {
-                        if (text.includes(key)) {
+                    for (const [key, value] of results) {
+                        if (text.includes(value)) {
                             keyLocations.set(key, file.fsPath);
                             return; // 找到后立即返回，不再继续搜索该文件
                         }
@@ -47,6 +99,7 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
             await Promise.all(promises);
 
             const quickPick = vscode.window.createQuickPick();
+
             quickPick.items = results.map(result => ({
                 label: `$(file) ${result[0]}`,
                 description: result[1],
@@ -55,18 +108,17 @@ async function globalSearch(keyword: string, source: Record<string, string>) {
             quickPick.placeholder = '选择要跳转的结果';
             quickPick.title = `找到 ${results.length} 个匹配项`;
 
-            quickPick.onDidAccept(() => {
+            quickPick.onDidAccept(async () => {
                 const selected = quickPick.selectedItems[0];
-                if (selected) {
-                    const key = selected.label.replace('$(file) ', '');
-                    const filePath = keyLocations.get(key);
-                    if (filePath) {
-                        vscode.workspace.openTextDocument(filePath).then(doc => {
-                            vscode.window.showTextDocument(doc);
-                        });
+                if (selected && selected.description) {
+                    const filePath = selected.detail;
+                    if (filePath && filePath !== '未找到文件位置') {
+                        const document = await vscode.workspace.openTextDocument(filePath);
+                        await vscode.window.showTextDocument(document);
+                        fileSearch(selected.description, source);
                     }
                 }
-                quickPick.hide();
+                // quickPick.hide();
             });
 
             quickPick.show();
@@ -84,65 +136,19 @@ export function search(
     }
 ) {
     const searchBoxDisposable = vscode.commands.registerCommand('spotter-i18n-hint.search', async () => {
-        // 获取当前按键上下文
-        const hasShift = vscode.window.activeTextEditor?.selections.length !== 1;
         const keyword = await vscode.window.showInputBox({
             placeHolder: '请输入要搜索的中文',
-            prompt: hasShift ? '搜索所有文件' : '搜索当前文件',
+            prompt: '搜索文案',
             ignoreFocusOut: true  // 让输入框常驻
         });
-        
         if (keyword) {
-            const editor = vscode.window.activeTextEditor;
-            if (editor) {
-                const document = editor.document;
-                const results = [];
-      
-                // 从翻译源中找到匹配的 key-value 对
-                const matchedPairs = Object.entries(source)
-                  .filter(([_, value]) => value === keyword);
-      
-                if (matchedPairs.length > 0) {
-                  // 获取当前文件内容
-                  const text = document.getText();
-      
-                  // 在当前文件中搜索匹配的 key
-                  for (const [key, _] of matchedPairs) {
-                    const keyRegex = new RegExp(`t\\(['"]${key}['"]`, 'g');
-                    if (keyRegex.test(text)) {
-                      results.push(key);
-                    }
-                  }
-      
-                  // 如果找到匹配项,选中所有匹配的key
-                  if (results.length > 0) {
-                    console.log(results, 111111)
-                    const selections: vscode.Selection[] = [];
-                    
-                    // 遍历每一行查找匹配的key
-                    // 构建一个合并的正则表达式来匹配所有key
-                    const combinedPattern = results.map(key => `t\\(['"]${key}['"]\\)`).join('|');
-                    const combinedRegex = new RegExp(combinedPattern, 'g');
-                    
-                    // 获取整个文档文本
-                    const fullText = document.getText();
-                    let match;
-                    
-                    // 只需要一次遍历就能找到所有匹配
-                    while ((match = combinedRegex.exec(fullText)) !== null) {
-                      // 通过位置计算行号和列号
-                      const pos = document.positionAt(match.index);
-                      const endPos = document.positionAt(match.index + match[0].length);
-                      selections.push(new vscode.Selection(pos, endPos));
-                    }
-                    
-                    // 设置编辑器选中
-                    editor.selections = selections;
-                  }
-                } else {
-                  vscode.window.showInformationMessage("翻译源中未找到包含该中文的条目");
-                }
-              }
+            if (keyword.includes('/g')) {
+                /** 全局搜索 */
+                await globalSearch(keyword.replace('/g', ''), source);
+            } else {
+                /** 文件内搜索并标记 */
+                fileSearch(keyword, source);
+            }
         }
     });
     context.subscriptions.push(searchBoxDisposable);
